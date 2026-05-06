@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>Kharcha</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0a;--s1:#141414;--s2:#1c1c1c;--s3:#242424;
+  --border:#2a2a2a;--border2:#333;
+  --accent:#c8f066;--accent-bg:rgba(200,240,102,0.1);--accent-border:rgba(200,240,102,0.3);
+  --text:#f0f0f0;--text2:#999;--text3:#555;
+  --red:#ff5f5f;--red-bg:rgba(255,95,95,0.1);
+  --green:#4ade80;
+  --r-sm:10px;--r-md:14px;--r-lg:18px;--r-xl:24px;
+  --fh:'Syne',sans-serif;--fm:'DM Mono',monospace;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fh);overflow:hidden}
+
+/* ── Layout ── */
+.app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;position:relative}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden}
+.screen.active{display:flex}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 32px}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── Nav bar ── */
+.nav{display:flex;border-top:1px solid var(--border);background:var(--bg);padding-bottom:var(--sab)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;gap:4px;cursor:pointer;border:none;background:transparent;color:var(--text3);font-family:var(--fh);font-size:10px;font-weight:600;letter-spacing:0.05em;transition:color 0.15s}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8;fill:none;stroke:currentColor}
+.nav-btn.active{color:var(--accent)}
+
+/* ── Header ── */
+.screen-header{padding:calc(var(--sat) + 16px) 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.screen-title{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.screen-sub{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* ── Add screen ── */
+.amount-hero{padding:24px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.amount-hint{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px}
+.amount-row{display:flex;align-items:flex-end;gap:6px}
+.currency-sym{font-size:32px;font-weight:700;color:var(--text3);font-family:var(--fm);padding-bottom:6px}
+.amount-field{font-size:56px;font-weight:800;font-family:var(--fm);background:transparent;border:none;outline:none;color:var(--accent);width:100%;letter-spacing:-3px;caret-color:var(--accent)}
+.amount-field::placeholder{color:var(--s3)}
+
+/* ── Form fields ── */
+.field{margin-bottom:18px}
+.field-label{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;display:block}
+.text-input{width:100%;padding:13px 16px;border-radius:var(--r-md);background:var(--s2);border:1px solid var(--border);color:var(--text);font-size:15px;font-family:var(--fh);outline:none;transition:border-color 0.15s;-webkit-appearance:none}
+.text-input:focus{border-color:var(--accent-border)}
+.text-input::placeholder{color:var(--text3)}
+select.text-input{cursor:pointer}
+select.text-input option{background:var(--s2)}
+
+/* ── Pill selector ── */
+.pills{display:flex;flex-wrap:wrap;gap:7px}
+.pill{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--s2);color:var(--text2);cursor:pointer;font-family:var(--fh);transition:all 0.12s;white-space:nowrap}
+.pill:active{transform:scale(0.94)}
+.pill.on{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent)}
+
+/* ── Date row ── */
+.date-tabs{display:flex;gap:7px;margin-bottom:8px}
+.date-tab{padding:9px 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--s2);color:var(--text2);cursor:pointer;font-family:var(--fh);transition:all 0.12s;flex-shrink:0}
+.date-tab.on{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent)}
+input[type=date].text-input{color-scheme:dark;flex:1}
+
+/* ── Save button ── */
+.save-wrap{padding:12px 20px calc(8px);flex-shrink:0;border-top:1px solid var(--border)}
+.btn-primary{width:100%;padding:16px;border-radius:var(--r-lg);font-size:16px;font-weight:700;background:var(--accent);color:#000;border:none;cursor:pointer;font-family:var(--fh);letter-spacing:0.02em;transition:transform 0.1s,opacity 0.15s}
+.btn-primary:active{transform:scale(0.97)}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed}
+
+/* ── Recent ── */
+.entry-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.entry-card:last-child{margin-bottom:0}
+.e-left{flex:1;min-width:0;margin-right:12px}
+.e-cat{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em}
+.e-item{font-size:15px;font-weight:600;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-meta{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--fm)}
+.e-right{text-align:right;flex-shrink:0}
+.e-amount{font-size:18px;font-weight:700;color:var(--accent);font-family:var(--fm)}
+.e-account{font-size:11px;color:var(--text3);margin-top:2px}
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-text{font-size:14px;line-height:1.5}
+
+/* ── Settings ── */
+.setting-section{margin-bottom:28px}
+.setting-section-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:7px}
+.setting-item-label{font-size:14px;font-weight:600;color:var(--text)}
+.setting-item-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.icon-btn{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:var(--text3);font-size:18px;transition:all 0.12s}
+.icon-btn:active{transform:scale(0.9)}
+.icon-btn.del:hover{color:var(--red)}
+.icon-btn.edit-btn:hover{color:var(--accent)}
+.setting-item-actions{display:flex;gap:4px}
+.add-row{display:flex;gap:8px;margin-top:8px}
+.add-row .text-input{flex:1}
+.btn-add{padding:13px 18px;border-radius:var(--r-md);font-size:14px;font-weight:700;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);cursor:pointer;font-family:var(--fh);white-space:nowrap;flex-shrink:0}
+.btn-add:active{transform:scale(0.95)}
+
+/* Sub-categories */
+.sub-section{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-top:4px}
+.sub-header{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+.sub-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--s3);border-radius:var(--r-sm);margin-bottom:6px;font-size:13px;color:var(--text2)}
+.sub-item:last-child{margin-bottom:0}
+
+/* URL config */
+.url-status{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r-sm);font-size:13px;margin-top:8px}
+.url-status.ok{background:rgba(74,222,128,0.1);color:var(--green)}
+.url-status.err{background:var(--red-bg);color:var(--red)}
+.url-status.none{background:var(--s2);color:var(--text3)}
+
+/* Script block */
+.code-block{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;font-family:var(--fm);font-size:11px;color:#aaa;line-height:1.8;overflow-x:auto;white-space:pre;margin:12px 0;position:relative}
+.copy-btn{position:absolute;top:8px;right:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--s3);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-family:var(--fh)}
+.copy-btn:active{background:var(--accent-bg);color:var(--accent)}
+.step-list{list-style:none;counter-reset:s}
+.step-list li{counter-increment:s;display:flex;gap:12px;margin-bottom:12px;font-size:13px;color:var(--text2);line-height:1.55}
+.step-list li::before{content:counter(s);background:var(--s2);color:var(--accent);min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;font-family:var(--fm)}
+.step-list li b{color:var(--text)}
+
+/* Toast */
+.toast{position:fixed;bottom:calc(72px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:var(--s2);color:var(--text);padding:12px 22px;border-radius:28px;font-size:14px;font-weight:600;border:1px solid var(--border);transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);z-index:999;white-space:nowrap;opacity:0;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:var(--accent-border);color:var(--accent)}
+.toast.err{border-color:rgba(255,95,95,0.4);color:var(--red)}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--s1);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 20px calc(20px + var(--sab));width:100%;max-width:480px;border-top:1px solid var(--border)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;margin-top:12px}
+.btn-cancel{flex:1;padding:13px;border-radius:var(--r-md);font-size:15px;font-weight:600;background:var(--s3);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-family:var(--fh)}
+.btn-confirm{flex:1;padding:13px;border-radius:var(--r-md);font-size:15px;font-weight:700;background:var(--accent);color:#000;border:none;cursor:pointer;font-family:var(--fh)}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:20px 0}
+.info-text{font-size:13px;color:var(--text2);line-height:1.6}
+.info-text b{color:var(--text)}
+
+/* Collapsible cat in settings */
+.cat-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.cat-toggle{font-size:12px;color:var(--text3);transition:transform 0.2s}
+.cat-toggle.open{transform:rotate(180deg)}
+.cat-body{display:none;margin-top:8px}
+.cat-body.open{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ADD SCREEN -->
+  <div class="screen active" id="screen-add">
+    <div class="amount-hero">
+      <div class="amount-hint">Amount (Rs)</div>
+      <div class="amount-row">
+        <span class="currency-sym">₨</span>
+        <input class="amount-field" id="inp-amount" type="number" inputmode="decimal" placeholder="0" min="0" autocomplete="off">
+      </div>
+    </div>
+    <div class="scroll">
+      <div class="field">
+        <label class="field-label">Category</label>
+        <div class="pills" id="cat-pills"></div>
+      </div>
+      <div class="field" id="subcat-field" style="display:none">
+        <label class="field-label">Sub-category <span style="color:var(--text3);font-size:10px">(optional)</span></label>
+        <div class="pills" id="subcat-pills"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Account</label>
+        <div class="pills" id="acc-pills"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Description</label>
+        <input class="text-input" id="inp-item" type="text" placeholder="e.g. coffee at office" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">Date</label>
+        <div class="date-tabs">
+          <div class="date-tab on" id="dtab-today" onclick="setDate('today')">Today</div>
+          <div class="date-tab" id="dtab-yest" onclick="setDate('yesterday')">Yesterday</div>
+        </div>
+        <input class="text-input" id="inp-date" type="date">
+      </div>
+    </div>
+    <div class="save-wrap">
+      <button class="btn-primary" id="save-btn" onclick="saveEntry()">Save Entry</button>
+    </div>
+  </div>
+
+  <!-- RECENT SCREEN -->
+  <div class="screen" id="screen-recent">
+    <div class="screen-header" style="padding-top:calc(var(--sat) + 16px)">
+      <div class="screen-title">Recent</div>
+      <div class="screen-sub" id="recent-sub">Last 30 entries</div>
+    </div>
+    <div class="scroll">
+      <div id="recent-list"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div class="screen" id="screen-settings">
+    <div class="screen-header" style="padding-top:calc(var(--sat) + 16px)">
+      <div class="screen-title">Settings</div>
+    </div>
+    <div class="scroll">
+
+      <!-- Sheets URL -->
+      <div class="setting-section">
+        <div class="setting-section-title">Google Sheets connection</div>
+        <div class="info-text">Paste the Apps Script deployment URL to save entries to your sheet.</div>
+        <div style="margin-top:10px">
+          <input class="text-input" id="url-input" type="url" placeholder="https://script.google.com/macros/s/...">
+          <div class="url-status none" id="url-status">Not configured</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn-primary" style="flex:1;padding:12px" onclick="saveUrl()">Save URL</button>
+            <button class="btn-primary" style="flex:1;padding:12px;background:var(--s3);color:var(--text2);border:1px solid var(--border)" onclick="testUrl()">Test</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="info-text" style="margin-bottom:12px"><b>How to get the URL:</b></div>
+        <ol class="step-list">
+          <li>Open your Google Sheet → <b>Extensions → Apps Script</b></li>
+          <li>Delete existing code, paste the script below, click <b>Save</b></li>
+          <li>Click <b>Deploy → New deployment</b></li>
+          <li>Type: <b>Web app</b> · Execute as: <b>Me</b> · Access: <b>Anyone</b></li>
+          <li>Click <b>Deploy</b>, copy the URL and paste above</li>
+        </ol>
+        <div class="code-block" id="script-code">const SHEET = 'cost';
+
+function doPost(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET);
+    if (!sheet) sheet = ss.insertSheet(SHEET);
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['Date','Year','Month',
+        'Month (int)','Header','Type',
+        'Item','Amount','Account']);
+    }
+    const d = JSON.parse(e.postData.contents);
+    sheet.appendRow([d.date,d.year,d.month,
+      d.monthInt,d.header,d.type,
+      d.item,d.amount,d.account]);
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:false,e:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet() {
+  return ContentService
+    .createTextOutput(JSON.stringify({ok:true,msg:'Kharcha connected'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+        <button class="copy-btn" onclick="copyScript()">Copy</button>
+      </div>
+
+      <!-- Accounts -->
+      <div class="setting-section">
+        <div class="setting-section-title">Accounts</div>
+        <div id="acc-list"></div>
+        <div class="add-row">
+          <input class="text-input" id="new-acc" placeholder="New account name" autocomplete="off">
+          <button class="btn-add" onclick="addAccount()">Add</button>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="setting-section">
+        <div class="setting-section-title">Categories & sub-categories</div>
+        <div id="cat-list"></div>
+        <div class="add-row">
+          <input class="text-input" id="new-cat" placeholder="New category" autocomplete="off">
+          <button class="btn-add" onclick="addCategory()">Add</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-add" onclick="switchScreen('add')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Add
+    </button>
+    <button class="nav-btn" id="nav-recent" onclick="switchScreen('recent')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      Recent
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="switchScreen('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Edit</div>
+    <input class="text-input" id="modal-input" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-category add modal -->
+<div class="modal-bg" id="subcat-modal">
+  <div class="modal">
+    <div class="modal-title" id="subcat-modal-title">Add sub-category</div>
+    <input class="text-input" id="subcat-modal-input" placeholder="Sub-category name" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSubModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmSubAdd()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Default data ──────────────────────────────────────────────
+const DEFAULT_ACCOUNTS = ['Alfalah Bank','HBL Credit','SCB Credit','Cash'];
+
+const DEFAULT_CATS = [
+  {name:'Food & Snacks', type:'Variable', subs:['Office food','Midnight food','Coffee','Ice cream','Snacks','Groceries run','Restaurant','Fast food']},
+  {name:'Groceries', type:'Variable', subs:['Vegetables & fruit','Bread & dairy','Meat','Household items','Personal care']},
+  {name:'Fuel', type:'Variable', subs:['Petrol fill','Indrive','Bykea','Careem','Parking']},
+  {name:'Entertainment', type:'Variable', subs:['Netflix','Spotify','YouTube','Gaming','Cricket','Cinema','Dining out']},
+  {name:'Shopping', type:'Variable', subs:['Clothes','Shoes','Electronics','Baby items','Gifts','Online (Daraz)']},
+  {name:'Car Upkeep', type:'Variable', subs:['Oil change','Car wash','Tyres','Battery','Repairs','Challan']},
+  {name:'Personal Upkeep', type:'Variable', subs:['Barber','Ironing','Mobile top-up','Gym','Perfume','Dry cleaning']},
+  {name:'Medical Expenses', type:'Variable', subs:['Medicine','Doctor visit','Tests / lab','Dentist','Emergency']},
+  {name:'Hobby', type:'Variable', subs:['Gaming','Gardening','Books','Sports','Yoga / fitness']},
+  {name:'Date', type:'Variable', subs:['Dinner','Lunch','Coffee date','Activity','Gift']},
+  {name:'Life Events', type:'Variable', subs:['Birthday','Anniversary','Eid','Wedding','Travel']},
+  {name:'Charity', type:'Variable', subs:['Sadqa','Donations','Zakat','Fitrana']},
+  {name:'Monthly Expenses', type:'Fixed', subs:['Rent','Amna expenses','Utilities','Internet']},
+  {name:'Installments & Loans', type:'Fixed', subs:['BC installment','Loan repayment']},
+  {name:'Misc', type:'Variable', subs:['Tips','Unknown','Taxes','Other']},
+];
+
+// ── State ─────────────────────────────────────────────────────
+let state = {
+  accounts: [...DEFAULT_ACCOUNTS],
+  categories: DEFAULT_CATS.map(c => ({...c, subs:[...c.subs]})),
+  sheetUrl: '',
+  entries: [],
+  // form
+  selCat: '',
+  selSubcat: '',
+  selAcc: '',
+  dateMode: 'today',
+};
+let editCtx = {};
+let subcatEditCatName = '';
+
+// ── Persistence ───────────────────────────────────────────────
+function save() { localStorage.setItem('kharcha', JSON.stringify(state)); }
+function load() {
+  const raw = localStorage.getItem('kharcha');
+  if (raw) {
+    const saved = JSON.parse(raw);
+    state = {...state, ...saved};
+  }
+}
+
+// ── Date helpers ──────────────────────────────────────────────
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
+function yesterdayStr() {
+  const d = new Date(); d.setDate(d.getDate()-1);
+  return d.toISOString().slice(0,10);
+}
+function fmtDate(str) {
+  const d = new Date(str+'T00:00:00');
+  return d.toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'});
+}
+function setDate(mode) {
+  state.dateMode = mode;
+  document.getElementById('dtab-today').classList.toggle('on', mode==='today');
+  document.getElementById('dtab-yest').classList.toggle('on', mode==='yesterday');
+  const inp = document.getElementById('inp-date');
+  if (mode==='today') inp.value = todayStr();
+  else if (mode==='yesterday') inp.value = yesterdayStr();
+  // custom: user picks from input, we leave it
+}
+
+function getSelectedDate() {
+  return document.getElementById('inp-date').value || todayStr();
+}
+
+// ── Screen nav ────────────────────────────────────────────────
+function switchScreen(name) {
+  ['add','recent','settings'].forEach(s => {
+    document.getElementById('screen-'+s).classList.toggle('active', s===name);
+    document.getElementById('nav-'+s).classList.toggle('active', s===name);
+  });
+  if (name==='recent') renderRecent();
+  if (name==='settings') renderSettings();
+}
+
+// ── Category pills ────────────────────────────────────────────
+function renderCatPills() {
+  const wrap = document.getElementById('cat-pills');
+  wrap.innerHTML = '';
+  state.categories.forEach(cat => {
+    const p = document.createElement('div');
+    p.className = 'pill' + (state.selCat===cat.name ? ' on' : '');
+    p.textContent = cat.name;
+    p.onclick = () => selectCat(cat.name);
+    wrap.appendChild(p);
+  });
+}
+
+function selectCat(name) {
+  state.selCat = name;
+  state.selSubcat = '';
+  renderCatPills();
+  renderSubcatPills();
+}
+
+function renderSubcatPills() {
+  const cat = state.categories.find(c => c.name===state.selCat);
+  const field = document.getElementById('subcat-field');
+  const wrap = document.getElementById('subcat-pills');
+  if (!cat || !cat.subs || cat.subs.length===0) { field.style.display='none'; return; }
+  field.style.display='block';
+  wrap.innerHTML = '';
+  cat.subs.forEach(sub => {
+    const p = document.createElement('div');
+    p.className = 'pill' + (state.selSubcat===sub ? ' on' : '');
+    p.textContent = sub;
+    p.onclick = () => {
+      state.selSubcat = state.selSubcat===sub ? '' : sub;
+      renderSubcatPills();
+      // auto-fill description if empty
+      const inp = document.getElementById('inp-item');
+      if (!inp.value) inp.value = sub;
+    };
+    wrap.appendChild(p);
+  });
+}
+
+function renderAccPills() {
+  const wrap = document.getElementById('acc-pills');
+  wrap.innerHTML = '';
+  state.accounts.forEach(acc => {
+    const p = document.createElement('div');
+    p.className = 'pill' + (state.selAcc===acc ? ' on' : '');
+    p.textContent = acc;
+    p.onclick = () => { state.selAcc = acc; renderAccPills(); };
+    wrap.appendChild(p);
+  });
+}
+
+// ── Save entry ────────────────────────────────────────────────
+async function saveEntry() {
+  const amount = parseFloat(document.getElementById('inp-amount').value);
+  const item = document.getElementById('inp-item').value.trim();
+  const date = getSelectedDate();
+
+  if (!amount || amount <= 0) { toast('Enter an amount', 'err'); return; }
+  if (!state.selCat) { toast('Pick a category', 'err'); return; }
+  if (!state.selAcc) { toast('Pick an account', 'err'); return; }
+
+  const cat = state.categories.find(c => c.name===state.selCat);
+  const d = new Date(date+'T00:00:00');
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const entry = {
+    date, year: d.getFullYear(), month: months[d.getMonth()],
+    monthInt: d.getMonth()+1, header: state.selCat,
+    type: cat ? cat.type : 'Variable',
+    item: item || state.selSubcat || state.selCat,
+    amount, account: state.selAcc,
+  };
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  // Save locally first
+  state.entries.unshift({...entry, savedAt: Date.now(), synced: false});
+  save();
+
+  // Try sync
+  let synced = false;
+  if (state.sheetUrl) {
+    try {
+      await fetch(state.sheetUrl, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(entry),
+      });
+      state.entries[0].synced = true;
+      save();
+      synced = true;
+    } catch(e) { /* will show offline msg */ }
+  }
+
+  // Reset form
+  document.getElementById('inp-amount').value = '';
+  document.getElementById('inp-item').value = '';
+  state.selSubcat = '';
+  renderSubcatPills();
+  setDate('today');
+
+  btn.disabled = false;
+  btn.textContent = 'Save Entry';
+
+  if (!state.sheetUrl) toast('Saved locally — add Sheet URL in Settings', 'ok');
+  else if (synced) toast('Saved to Google Sheets ✓', 'ok');
+  else toast('Saved locally (sync failed)', 'err');
+}
+
+// ── Recent ────────────────────────────────────────────────────
+function renderRecent() {
+  const list = document.getElementById('recent-list');
+  const sub = document.getElementById('recent-sub');
+  if (!state.entries.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No entries yet.<br>Add your first one!</div></div>`;
+    sub.textContent = '';
+    return;
+  }
+  sub.textContent = `${state.entries.length} entr${state.entries.length===1?'y':'ies'}`;
+  list.innerHTML = state.entries.slice(0,50).map((e,i) => `
+    <div class="entry-card">
+      <div class="e-left">
+        <div class="e-cat">${e.header}</div>
+        <div class="e-item">${e.item}</div>
+        <div class="e-meta">${fmtDate(e.date)} · ${e.synced ? '✓ synced' : '⚠ local only'}</div>
+      </div>
+      <div class="e-right">
+        <div class="e-amount">₨${e.amount.toLocaleString()}</div>
+        <div class="e-account">${e.account}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Settings ──────────────────────────────────────────────────
+function renderSettings() {
+  // URL
+  const urlInp = document.getElementById('url-input');
+  urlInp.value = state.sheetUrl || '';
+  updateUrlStatus();
+
+  // Accounts
+  const accList = document.getElementById('acc-list');
+  accList.innerHTML = state.accounts.map((acc,i) => `
+    <div class="setting-item">
+      <div>
+        <div class="setting-item-label">${acc}</div>
+      </div>
+      <div class="setting-item-actions">
+        <div class="icon-btn edit-btn" onclick="openEditModal('acc',${i})">✏️</div>
+        <div class="icon-btn del" onclick="deleteAccount(${i})">✕</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Categories
+  const catList = document.getElementById('cat-list');
+  catList.innerHTML = state.categories.map((cat,ci) => `
+    <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:0">
+      <div class="cat-header" onclick="toggleCat(${ci})">
+        <div>
+          <div class="setting-item-label">${cat.name}</div>
+          <div class="setting-item-sub">${cat.type} · ${cat.subs.length} sub-categories</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="icon-btn edit-btn" onclick="event.stopPropagation();openEditModal('cat',${ci})"  >✏️</div>
+          <div class="icon-btn del" onclick="event.stopPropagation();deleteCategory(${ci})">✕</div>
+          <div class="cat-toggle" id="ct-${ci}">▼</div>
+        </div>
+      </div>
+      <div class="cat-body" id="cb-${ci}">
+        <div class="sub-section">
+          <div class="sub-header">Sub-categories</div>
+          ${cat.subs.map((s,si) => `
+            <div class="sub-item">
+              <span>${s}</span>
+              <div class="icon-btn del" style="width:24px;height:24px;font-size:14px" onclick="deleteSub(${ci},${si})">✕</div>
+            </div>
+          `).join('')}
+          <button class="btn-add" style="width:100%;margin-top:8px" onclick="openSubModal(${ci})">+ Add sub-category</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCat(ci) {
+  const body = document.getElementById('cb-'+ci);
+  const toggle = document.getElementById('ct-'+ci);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  toggle.classList.toggle('open', !isOpen);
+}
+
+function updateUrlStatus() {
+  const el = document.getElementById('url-status');
+  if (!state.sheetUrl) {
+    el.className='url-status none'; el.textContent='Not configured';
+  } else {
+    el.className='url-status ok'; el.textContent='URL saved ✓';
+  }
+}
+
+function saveUrl() {
+  const val = document.getElementById('url-input').value.trim();
+  if (val && !val.startsWith('https://script.google.com')) {
+    toast('Looks like an invalid URL', 'err'); return;
+  }
+  state.sheetUrl = val;
+  save(); updateUrlStatus();
+  toast('URL saved', 'ok');
+}
+
+async function testUrl() {
+  if (!state.sheetUrl) { toast('No URL saved yet', 'err'); return; }
+  toast('Testing…', '');
+  try {
+    const r = await fetch(state.sheetUrl);
+    const d = await r.json();
+    if (d.ok) toast('Connected! ✓', 'ok');
+    else toast('Sheet responded but returned error', 'err');
+  } catch(e) {
+    toast('Could not reach Sheet', 'err');
+  }
+}
+
+function addAccount() {
+  const inp = document.getElementById('new-acc');
+  const val = inp.value.trim();
+  if (!val) return;
+  state.accounts.push(val);
+  inp.value = '';
+  save(); renderSettings(); renderAccPills();
+}
+
+function deleteAccount(i) {
+  state.accounts.splice(i,1);
+  if (state.selAcc && !state.accounts.includes(state.selAcc)) state.selAcc='';
+  save(); renderSettings(); renderAccPills();
+}
+
+function addCategory() {
+  const inp = document.getElementById('new-cat');
+  const val = inp.value.trim();
+  if (!val) return;
+  state.categories.push({name:val, type:'Variable', subs:[]});
+  inp.value = '';
+  save(); renderSettings(); renderCatPills();
+}
+
+function deleteCategory(i) {
+  state.categories.splice(i,1);
+  if (state.selCat && !state.categories.find(c=>c.name===state.selCat)) state.selCat='';
+  save(); renderSettings(); renderCatPills();
+}
+
+function deleteSub(ci, si) {
+  state.categories[ci].subs.splice(si,1);
+  save(); renderSettings();
+}
+
+// ── Edit modal ────────────────────────────────────────────────
+function openEditModal(type, idx) {
+  editCtx = {type, idx};
+  const val = type==='acc' ? state.accounts[idx] : state.categories[idx].name;
+  document.getElementById('modal-title').textContent = type==='acc' ? 'Edit account' : 'Edit category';
+  document.getElementById('modal-input').value = val;
+  document.getElementById('edit-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-input').focus(), 100);
+}
+
+function confirmEdit() {
+  const val = document.getElementById('modal-input').value.trim();
+  if (!val) { closeModal(); return; }
+  if (editCtx.type==='acc') state.accounts[editCtx.idx] = val;
+  else state.categories[editCtx.idx].name = val;
+  save(); closeModal(); renderSettings(); renderCatPills(); renderAccPills();
+}
+
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); }
+
+// ── Sub-category modal ────────────────────────────────────────
+function openSubModal(ci) {
+  subcatEditCatName = ci;
+  document.getElementById('subcat-modal-title').textContent = 'Add to ' + state.categories[ci].name;
+  document.getElementById('subcat-modal-input').value = '';
+  document.getElementById('subcat-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('subcat-modal-input').focus(), 100);
+}
+
+function confirmSubAdd() {
+  const val = document.getElementById('subcat-modal-input').value.trim();
+  if (val) { state.categories[subcatEditCatName].subs.push(val); save(); }
+  closeSubModal(); renderSettings();
+}
+
+function closeSubModal() { document.getElementById('subcat-modal').classList.remove('open'); }
+
+// ── Copy script ───────────────────────────────────────────────
+function copyScript() {
+  const code = document.getElementById('script-code').textContent;
+  navigator.clipboard.writeText(code).then(()=>toast('Copied!','ok')).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); toast('Copied!','ok');
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+// ── date input sync ───────────────────────────────────────────
+document.getElementById('inp-date').addEventListener('change', function() {
+  state.dateMode = 'custom';
+  document.getElementById('dtab-today').classList.remove('on');
+  document.getElementById('dtab-yest').classList.remove('on');
+});
+
+// ── Modal close on bg click ───────────────────────────────────
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target===this) closeModal();
+});
+document.getElementById('subcat-modal').addEventListener('click', function(e) {
+  if (e.target===this) closeSubModal();
+});
+
+// ── Enter key in modals ───────────────────────────────────────
+document.getElementById('modal-input').addEventListener('keydown', e => { if(e.key==='Enter') confirmEdit(); });
+document.getElementById('subcat-modal-input').addEventListener('keydown', e => { if(e.key==='Enter') confirmSubAdd(); });
+document.getElementById('new-acc').addEventListener('keydown', e => { if(e.key==='Enter') addAccount(); });
+document.getElementById('new-cat').addEventListener('keydown', e => { if(e.key==='Enter') addCategory(); });
+
+// ── Init ──────────────────────────────────────────────────────
+load();
+setDate('today');
+renderCatPills();
+renderAccPills();
+
+// ── Service Worker registration ───────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
