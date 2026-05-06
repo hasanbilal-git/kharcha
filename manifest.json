@@ -2,7 +2,7 @@
   "name": "Kharcha",
   "short_name": "Kharcha",
   "description": "Personal expense tracker",
-  "start_url": "/index.html",
+  "start_url": "/kharcha/index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0a",
